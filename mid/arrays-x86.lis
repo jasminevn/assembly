@@ -1,0 +1,159 @@
+     1                                  ;***************************************************************************************************************************
+     2                                  ;Program name: "Array Passing Demonstration".  This program demonstrates how to pass an array of floats from a C++ function *
+     3                                  ;to an X86 function, and back.  The X86 function makes changes to the array, and the C++ receives the array with changes    *
+     4                                  ;included.  Copyright (C) 2018  Floyd Holliday                                                                              *
+     5                                  ;This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License  *
+     6                                  ;version 3 as published by the Free Software Foundation.                                                                    *
+     7                                  ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied         *
+     8                                  ;warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.     *
+     9                                  ;A copy of the GNU General Public License v3 is available here:  <https://www.gnu.org/licenses/>.                           *
+    10                                  ;****************************************************************************************************************************
+    11                                  
+    12                                  
+    13                                  
+    14                                  ;========1=========2=========3=========4=========5=========6=========7=========8=========9=========0=========1=========2=========3=========4=========5=========6=========7**
+    15                                  
+    16                                  ;Author information
+    17                                  ;  Author name: Floyd Holliday
+    18                                  ;  Author email: holliday@fullerton.edu
+    19                                  ;
+    20                                  ;Program information
+    21                                  ;  Program name: Array Passing Demonstration
+    22                                  ;  Programming languages: Main function in C++; array receiving function in X86-64
+    23                                  ;  Date program began: 2018-Feb-20
+    24                                  ;  Date of last update: 2018-Feb-20
+    25                                  ;  Comments reorganized: 2018-Nov-10
+    26                                  ;  Files in the program: arrays-main.cpp, arrays-x86.asm, run.sh
+    27                                  ;z
+    28                                  ;Purpose
+    29                                  ;  The intent of this program is to show some of the basic techniques for managing arrays.  Some interesting actions can be seen
+    30                                  ;  here.  You can discover where the C++ driver program stored the values 88.9 and 3.1416.  The action of returning from the X86 
+    31                                  ;  function causes the location previously holding 88.9 to change its value.
+    32                                  ;
+    33                                  ;This file
+    34                                  ;  File name: arrays-x86.asm
+    35                                  ;  Language: X86-64
+    36                                  ;  Syntax: Intel
+    37                                  ;  Max page width: 172 columns
+    38                                  ;  Optimal print specification: Landscape, 7-point font, monospace, 172 columns, 8½x11 paper
+    39                                  ;  Assemble: nasm -f elf64 -l arrays-x86.lis -o arrays-x86.o arrays-x86.asm
+    40                                  ;
+    41                                  ;========1=========2=========3=========4=========5=========6=========7=========8=========9=========0=========1=========2=========3=========4=========5=========6=========7**
+    42                                  ;
+    43                                  ;Author information
+    44                                  ;  Author name: Floyd Holliday
+    45                                  ;  Author email: holliday@fullerton.edu
+    46                                  ;
+    47                                  ;Program information
+    48                                  ;  Program name: Array Sample Program
+    49                                  ;  Programming languages: X86 with one module in C++
+    50                                  ;  Date program began: 2018-Feb-20
+    51                                  ;  Date of last update: 2018-Feb-20
+    52                                  ;
+    53                                  ;Purpose
+    54                                  ;  The intent of this program is to show some of the basic tools or techniques for working with arrays.
+    55                                  ;
+    56                                  ;Project information
+    57                                  ;  Project files: arrays-main.cpp, arrays-x86.asm, run.sh
+    58                                  ;  Status: Available for public review.
+    59                                  ;
+    60                                  ;Translator information
+    61                                  ;  Linux: nasm -f elf64 -l arrays-x86.lis -o arrays-x86.o arrays-x86.asm
+    62                                  ;
+    63                                  ;References and credits
+    64                                  ;  Seyfarth, Chapter 10
+    65                                  ;
+    66                                  ;Format information
+    67                                  ;  Page width: 172 columns
+    68                                  ;  Begin comments: 61
+    69                                  ;  Optimal print specification: Landscape, 7 points, monospace, 8½x11 paper
+    70                                  ;
+    71                                  ;
+    72                                  ;
+    73                                  ;
+    74                                  ;========1=========2=========3=========4=========5=========6=========7=========8=========9=========0=========1=========2=========3=========4=========5=========6=========7**
+    75                                  ;
+    76                                  ;===== Begin code area ====================================================================================================================================================
+    77                                  
+    78                                  extern printf                                               ;External C++ function for writing to standard output device
+    79                                  
+    80                                  extern scanf                                                ;External C++ function for reading from the standard input device
+    81                                  
+    82                                  extern display
+    83                                  
+    84                                  global array_tools                                          ;This makes array_tools callable by functions outside of this file.
+    85                                  
+    86                                  segment .data                                               ;Place initialized data here
+    87                                  
+    88                                  
+    89                                  
+    90                                  ;===== Declare some messages ==============================================================================================================================================
+    91                                  ;The identifiers in this segment are quadword pointers to ascii strings stored in heap space.  They are not variables.  They are not constants.  There are no constants in
+    92                                  ;assembly programming.  There are no variables in assembly programming: the registers assume the role of variables.
+    93                                  
+    94 00000000 506C6561736520656E-     promptmessage db "Please enter an integer: " , 0
+    94 00000009 74657220616E20696E-
+    94 00000012 74656765723A2000   
+    95                                  
+    96 0000001A 256C6400                inputformat db "%ld" , 0
+    97                                  
+    98                                  segment .bss                                                ;Declare pointers to un-initialized space in this segment.
+    99                                  
+   100 00000000 <res 000001E0>          myarray resq 60
+   101                                  ;==========================================================================================================================================================================
+   102                                  ;===== Begin the application here: show how to input and output floating point numbers ====================================================================================
+   103                                  ;==========================================================================================================================================================================
+   104                                  
+   105                                  segment .text                                               ;Place executable instructions in this segment.
+   106                                  
+   107                                  array_tools:                                                ;Entry point.  Execution begins here.
+   108                                  
+   109                                  ;=========== Prompt for integer ==============
+   110                                  
+   111 00000000 B800000000              mov qword  rax, 0                                           
+   112 00000005 48BF-                   mov        rdi, promptmessage                    ;Enter an integer:           
+   112 00000007 [0000000000000000] 
+   113 0000000F E8(00000000)            call       printf                                           
+   114                                  
+   115                                  
+   116                                  
+   117                                  ;===== for loop until ctrl d =========================
+   118                                  
+   119 00000014 41BF00000000            mov        r15, 0
+   120 0000001A 41BE00000000            mov	     r14, 0
+   121                                  begin_loop:
+   122                                  
+   123 00000020 49B8-                   mov r8, myarray
+   123 00000022 [0000000000000000] 
+   124 0000002A 6A00                    push qword 0				;reserve 8 bytes of storage 
+   125 0000002C B800000000              mov qword  rax, 0			;SSE is not involved in this scanf operation
+   126 00000031 48BF-                   mov        rdi, inputformat
+   126 00000033 [1A00000000000000] 
+   127 0000003B 4889E6                  mov        rsi, rsp			;give scanf a pointer to the reserved storage
+   128 0000003E E8(00000000)            call       scanf			;call a library function to do the input work
+   129 00000043 99                      cdq					;place into rdx sign-extension of that 32-bits to the left
+   130 00000044 48C1E220                shl 	     rdx, 32			;shift the sign extension 32 bits to the left
+   131 00000048 4809D0                  or         rax, rdx			;Perform the operation rax = rax or rdx
+   132 0000004B 4883F8FF                cmp 	     rax, -1			;Compare rax with -1
+   133 0000004F 740E                    je	   loop_finished		;if rax == -1 then exit from the loop
+   134 00000051 4C8B2C24                mov	     r13, [rsp]			;copy the inputted number to r13
+   135 00000055 4F892CF8                mov        [r8 + 8 * r15], r13
+   136 00000059 58                      pop	     rax				;make free the storage that was used by scanf
+   137 0000005A 49FFC7                  inc	     r15				;add 1 to the loop counter
+   138 0000005D EBC1                    jmp	     begin_loop			;REPEAT THE LOOP
+   139                                  
+   140                                  loop_finished:
+   141 0000005F 58                      pop	   rax
+   142                                  
+   143                                  
+   144 00000060 48BF-                   mov rdi, myarray
+   144 00000062 [0000000000000000] 
+   145 0000006A 4C89FE                  mov rsi, r15
+   146 0000006D E8(00000000)            call display
+   147                                  
+   148                                  
+   149                                  
+   150                                  
+   151 00000072 C3                      ret                                                         ;Pop a qword from the stack into rip, and continue executing..
+   152                                  ;========== End of program arrays-x86.asm =================================================================================================================================
+   153                                  ;========1=========2=========3=========4=========5=========6=========7=========8=========9=========0=========1=========2=========3=========4=========5=========6=========7**

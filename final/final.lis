@@ -1,0 +1,310 @@
+     1                                  ;Jasmine Nguyen
+     2                                  ;CPSC 240
+     3                                  ;Final Exam Part 2
+     4                                  ;This program submitted to satisfy a special deal
+     5                                  
+     6                                  ;=====Begin code here==================
+     7                                  extern printf						;External C++ function for writing to standard output device
+     8                                  
+     9                                  extern scanf						;External C++ function for reading from the standard input device
+    10                                  
+    11                                  global harmonic					;This makes harmonic callable by functions outside of this file
+    12                                  
+    13                                  segment .data						;Place initialized data here
+    14                                  
+    15                                  ;====declare some messages==========
+    16 00000000 54686520636C6F636B-     clockintro db "The clock time is now %ld", 10, 0
+    16 00000009 2074696D6520697320-
+    16 00000012 6E6F7720256C640A00 
+    17                                  
+    18 0000001B 546869732070726F67-     introduction db "This program will compute the resistance, current, and the work of the circuit ", 10, 0
+    18 00000024 72616D2077696C6C20-
+    18 0000002D 636F6D707574652074-
+    18 00000036 686520726573697374-
+    18 0000003F 616E63652C20637572-
+    18 00000048 72656E742C20616E64-
+    18 00000051 2074686520776F726B-
+    18 0000005A 206F66207468652063-
+    18 00000063 697263756974200A00 
+    19                                  
+    20 0000006C 456E74657220746865-     promptmess db "Enter the resistance of a circuit: ", 0
+    20 00000075 20726573697374616E-
+    20 0000007E 6365206F6620612063-
+    20 00000087 6972637569743A2000 
+    21                                  
+    22 00000090 256C6600                input db "%lf", 0
+    23                                  
+    24 00000094 256C6400                input2 db "%ld", 0
+    25                                  
+    26 00000098 5468616E6B20796F75-     answer db "Thank you. The number of sub-circuits is %ld", 10, 0
+    26 000000A1 2E20546865206E756D-
+    26 000000AA 626572206F66207375-
+    26 000000B3 622D63697263756974-
+    26 000000BC 7320697320256C640A-
+    26 000000C5 00                 
+    27                                  
+    28 000000C6 54686520746F74616C-     total db "The total resistance in this system is R = %lf ohms", 10, 0
+    28 000000CF 20726573697374616E-
+    28 000000D8 636520696E20746869-
+    28 000000E1 732073797374656D20-
+    28 000000EA 69732052203D20256C-
+    28 000000F3 66206F686D730A00   
+    29                                  
+    30 000000FB 506C6561736520656E-     voltage db "Please enter the voltage of battery in volts: ", 0
+    30 00000104 746572207468652076-
+    30 0000010D 6F6C74616765206F66-
+    30 00000116 206261747465727920-
+    30 0000011F 696E20766F6C74733A-
+    30 00000128 2000               
+    31                                  
+    32 0000012A 546865207261746520-     currentflow db "The rate of the current flow is I = %lf amps", 10, 0
+    32 00000133 6F6620746865206375-
+    32 0000013C 7272656E7420666C6F-
+    32 00000145 772069732049203D20-
+    32 0000014E 256C6620616D70730A-
+    32 00000157 00                 
+    33                                  
+    34 00000158 54686520776F726B20-     work db "The work performed by this circuit during the last 60 seconds is W = %lf joules", 10, 0
+    34 00000161 706572666F726D6564-
+    34 0000016A 206279207468697320-
+    34 00000173 636972637569742064-
+    34 0000017C 7572696E6720746865-
+    34 00000185 206C61737420363020-
+    34 0000018E 7365636F6E64732069-
+    34 00000197 732057203D20256C66-
+    34 000001A0 206A6F756C65730A00 
+    35                                  
+    36 000001A9 54686520636C6F636B-     clocknow db "The clock time is now %ld", 10, 0
+    36 000001B2 2074696D6520697320-
+    36 000001BB 6E6F7720256C640A00 
+    37                                  
+    38 000001C4 5468616E6B20796F75-     bye db "Thank you for using my program. The total resistance will now be returned to the driver", 10, 0
+    38 000001CD 20666F72207573696E-
+    38 000001D6 67206D792070726F67-
+    38 000001DF 72616D2E2054686520-
+    38 000001E8 746F74616C20726573-
+    38 000001F1 697374616E63652077-
+    38 000001FA 696C6C206E6F772062-
+    38 00000203 652072657475726E65-
+    38 0000020C 6420746F2074686520-
+    38 00000215 6472697665720A00   
+    39                                  
+    40                                  segment .bss
+    41                                  
+    42                                  ;=====begin executable instructions here===========
+    43                                  
+    44                                  segment .text						;Place executable instructions in this segment
+    45                                  
+    46                                  harmonic:							;Entry point. Execution begins here.
+    47                                  
+    48                                  
+    49                                  ;=========== Back up all the GPRs whether used in this program or not ====================
+    50                                  
+    51 00000000 55                      push       rbp                                              ;Save a copy of the stack base pointer
+    52 00000001 4889E5                  mov        rbp, rsp                                         ;We do this in order to be 100% compatible with C and C++.
+    53 00000004 53                      push       rbx                                              ;Back up rbx
+    54 00000005 51                      push       rcx                                              ;Back up rcx
+    55 00000006 52                      push       rdx                                              ;Back up rdx
+    56 00000007 56                      push       rsi                                              ;Back up rsi
+    57 00000008 57                      push       rdi                                              ;Back up rdi
+    58 00000009 4150                    push       r8                                               ;Back up r8
+    59 0000000B 4151                    push       r9                                               ;Back up r9
+    60 0000000D 4152                    push       r10                                              ;Back up r10
+    61 0000000F 4153                    push       r11                                              ;Back up r11
+    62 00000011 4154                    push       r12                                              ;Back up r12
+    63 00000013 4155                    push       r13                                              ;Back up r13
+    64 00000015 4156                    push       r14                                              ;Back up r14
+    65 00000017 4157                    push       r15                                              ;Back up r15
+    66 00000019 9C                      pushf                                                       ;Back up rflags
+    67                                  
+    68                                  
+    69                                  
+    70                                  ;=======Read the time on clock and save that time==========
+    71                                  
+    72 0000001A B800000000              mov qword rax, 0							;make sure rax is zerod out. This may be in-necessary.
+    73 0000001F BA00000000              mov qword rdx, 0
+    74 00000024 0FA2                    cpuid																		
+    75 00000026 0F31                    rdtsc											;write the number of tics in edx:eax
+    76 00000028 48C1E220                shl rdx, 32									;shift the lower half of rdx to the upper half of rdx
+    77 0000002C 4809D0                  or rax, rdx									;join the two half into a single register, namely:rax
+    78 0000002F 4989D3                  mov r11, rdx								;save the clock in a safe register, r11
+    79                                  
+    80                                  ;=========display the time==================
+    81                                  
+    82 00000032 B800000000              mov qword rax, 0							;No data from SSE will be printed
+    83 00000037 48BF-                   mov rdi, clockintro						;"The time is %ld tics"
+    83 00000039 [0000000000000000] 
+    84 00000041 4C89DE                  mov rsi, r11											
+    85 00000044 E8(00000000)            call printf
+    86                                  
+    87                                  ;==== display mess=====
+    88 00000049 B800000000              mov qword rax, 0
+    89 0000004E 48BF-                   mov rdi, introduction					;This program will compute circuits
+    89 00000050 [1B00000000000000] 
+    90 00000058 E8(00000000)            call printf
+    91                                  
+    92                                  ;===Ask user for values=====
+    93                                  
+    94 0000005D B800000000              mov qword rax, 0
+    95 00000062 48BF-                   mov rdi, promptmess					   ;Enter the resistance
+    95 00000064 [6C00000000000000] 
+    96 0000006C E8(00000000)            call printf
+    97                                  
+    98                                  
+    99                                  ;===== for loop until ctrl d =========================
+   100                                  
+   101 00000071 41BF00000000            mov r15, 0
+   102 00000077 6A00                    push qword 0
+   103 00000079 F2440F101424            movsd xmm10, [rsp]
+   104 0000007F 58                      pop rax
+   105                                  
+   106                                  begin_loop:
+   107 00000080 6A00                    push qword 0
+   108 00000082 6A00                    push qword 0					;reserve 8 bytes of storage 
+   109 00000084 B800000000              mov qword  rax, 0				;SSE is not involved in this scanf operation
+   110 00000089 48BF-                   mov rdi, input
+   110 0000008B [9000000000000000] 
+   111 00000093 4889E6                  mov rsi, rsp					;give scanf a pointer to the reserved storage
+   112 00000096 E8(00000000)            call scanf						;call a library function to do the input work
+   113                                  
+   114 0000009B 99                      cdq								;place into rdx sign-extension of that 32-bits to the left
+   115 0000009C 48C1E220                shl rdx, 32						;shift the sign extension 32 bits to the left
+   116 000000A0 4809D0                  or  rax, rdx					;Perform the operation rax = rax or rdx
+   117 000000A3 4883F8FF                cmp rax, -1						;Compare rax with -1
+   118 000000A7 7422                    je	 loop_finished				;if rax == -1 then exit from the loop
+   119                                  
+   120 000000A9 F2440F100424            movsd xmm8, [rsp]
+   121                                  
+   122 000000AF B801000000              mov rax, 1
+   123 000000B4 F24C0F2AC8              cvtsi2sd xmm9, rax			
+   124 000000B9 F2450F5EC8              divsd xmm9, xmm8				;1/R
+   125 000000BE F2450F58D1              addsd xmm10, xmm9			
+   126                                  
+   127 000000C3 415D                    pop r13							;make free the storage that was used by scanf
+   128 000000C5 58                      pop rax
+   129 000000C6 49FFC7                  inc r15							;add 1 to the loop counter
+   130 000000C9 EBB5                    jmp begin_loop					;REPEAT THE LOOP
+   131                                  
+   132                                  loop_finished:
+   133 000000CB 58                      pop rax                                        ;These two pops are needed because the loop did not complete the last
+   134 000000CC 58                      pop rax                                        ;iteration.  The loop jumped out before doing 2 pops.
+   135                                  
+   136 000000CD F2450F10FA              movsd xmm15, xmm10                             ;Save an extra backup copy of xmm10
+   137                                  
+   138                                  ;====Return total input======
+   139 000000D2 B800000000              mov qword rax, 0
+   140 000000D7 48BF-                   mov rdi, answer			;The total number of sub-circuits is "%ld"
+   140 000000D9 [9800000000000000] 
+   141 000000E1 4C89FE                  mov rsi, r15
+   142 000000E4 E8(00000000)            call printf
+   143                                  
+   144                                  ;====return total resistance=======
+   145 000000E9 B801000000              mov qword rax, 1
+   146 000000EE 48BF-                   mov rdi, total					;The total number of resistance is "%lf"
+   146 000000F0 [C600000000000000] 
+   147 000000F8 F2410F10C2              movsd xmm0, xmm10
+   148 000000FD E8(00000000)            call printf
+   149                                  
+   150                                  ;===Ask user for voltage value=====
+   151                                  
+   152 00000102 B800000000              mov qword rax, 0
+   153 00000107 48BF-                   mov rdi, voltage					;Enter the voltage
+   153 00000109 [FB00000000000000] 
+   154 00000111 E8(00000000)            call printf
+   155                                  
+   156                                  ;=========== SCANF FOR INPUT ========
+   157 00000116 6A00                    push     qword 0
+   158 00000118 6A00                    push     qword 0
+   159 0000011A B800000000              mov 	   rax, 0                      ;No data from SSE will be printed
+   160 0000011F 48BF-                   mov      rdi, input2                 ;"%ld"
+   160 00000121 [9400000000000000] 
+   161 00000129 4889E6                  mov	   rsi, rsp
+   162 0000012C E8(00000000)            call     scanf                                         
+   163 00000131 415E                    pop      r14    
+   164 00000133 58                      pop      rax              
+   165                                  
+   166                                  
+   167                                  ;====calculate for current flow=====
+   168 00000134 B801000000              mov qword rax, 1
+   169 00000139 F2490F2ACE              cvtsi2sd xmm1, r14						;convert voltage to a float number
+   170 0000013E F2410F5ECA              divsd xmm1, xmm10							;divide resistance over voltage
+   171                                  
+   172 00000143 F20F10D9                movsd xmm3, xmm1							;store to xmm3
+   173                                  
+   174                                  
+   175                                  ;===display current flow=====
+   176 00000147 B801000000              mov qword rax, 1
+   177 0000014C 48BF-                   mov rdi, currentflow
+   177 0000014E [2A01000000000000] 
+   178 00000156 F20F10C1                movsd xmm0, xmm1							;display the current flow
+   179 0000015A E8(00000000)            call printf
+   180                                  
+   181                                  
+   182                                  ;=== calculate work (I^2 x R x 60)====
+   183 0000015F 41B93C000000            mov r9, 60									;store 60 seconds in r9
+   184 00000165 F2490F2AD1              cvtsi2sd xmm2, r9							; 60 = 60.0 (float number)
+   185 0000016A F20F10D9                movsd xmm3, xmm1							;get one more current flow 
+   186 0000016E F20F59D9                mulsd xmm3, xmm1						   ;square the current flow (I^2)
+   187 00000172 F20F10E3                movsd xmm4, xmm3							;store I^2 to xmm4
+   188 00000176 F2440F59D4              mulsd xmm10, xmm4						   ;multiply I^2 with R(resistance)
+   189 0000017B F2410F10F2              movsd xmm6, xmm10							;store in xmm6
+   190 00000180 F20F59D6                mulsd xmm2, xmm6							;multiply I^2 x R with 60.0
+   191                                  
+   192                                  ;====display work=====
+   193 00000184 B801000000              mov qword rax, 1
+   194 00000189 48BF-                   mov rdi, work
+   194 0000018B [5801000000000000] 
+   195 00000193 F20F10C2                movsd xmm0, xmm2
+   196 00000197 E8(00000000)            call printf
+   197                                  
+   198                                  
+   199                                  ;== find current time==
+   200 0000019C BA00000000              mov qword rdx, 0					;set registers back to zero
+   201 000001A1 B800000000              mov qword rax, 0
+   202 000001A6 0FA2                    cpuid
+   203 000001A8 0F31                    rdtsc
+   204 000001AA 48C1E220                shl rdx, 32
+   205 000001AE 4809D0                  or rax, rdx
+   206                                  
+   207 000001B1 4989C4                  mov r12, rax						;store time to r12
+   208                                  
+   209                                  ;=== calculate total time (end - beginning) =====
+   210                                  
+   211 000001B4 4D29DC                  sub r12, r11
+   212                                  
+   213                                  ;==== display clock=====
+   214 000001B7 B800000000              mov qword rax, 0
+   215 000001BC 48BF-                   mov rdi, clocknow
+   215 000001BE [A901000000000000] 
+   216 000001C6 4C89E6                  mov rsi, r12					;"The clock time now"
+   217 000001C9 E8(00000000)            call printf
+   218                                  
+   219                                  ;==== bye=========
+   220                                  
+   221                                  ;mov qword rax, 0
+   222                                  ;mov rdi, bye					;"resistance will be returned to  driver"
+   223                                  ;call printf
+   224                                  
+   225                                  
+   226 000001CE F2410F10C7              movsd xmm0, xmm15       ;Send a copy of the work to the driver.
+   227                                  ;I couldn't figure out the work so I sent back the resistance
+   228                                  
+   229                                  ;=========== Restore GPR values and return to the caller =========
+   230                                  
+   231 000001D3 9D                      popf                                                        ;Restore rflags
+   232 000001D4 415F                    pop        r15                                              ;Restore r15
+   233 000001D6 415E                    pop        r14                                              ;Restore r14
+   234 000001D8 415D                    pop        r13                                              ;Restore r13
+   235 000001DA 415C                    pop        r12                                              ;Restore r12
+   236 000001DC 415B                    pop        r11                                              ;Restore r11
+   237 000001DE 415A                    pop        r10                                              ;Restore r10
+   238 000001E0 4159                    pop        r9                                               ;Restore r9
+   239 000001E2 4158                    pop        r8                                               ;Restore r8
+   240 000001E4 5F                      pop        rdi                                              ;Restore rdi
+   241 000001E5 5E                      pop        rsi                                              ;Restore rsi
+   242 000001E6 5A                      pop        rdx                                              ;Restore rdx
+   243 000001E7 59                      pop        rcx                                              ;Restore rcx
+   244 000001E8 5B                      pop        rbx                                              ;Restore rbx
+   245 000001E9 5D                      pop        rbp                                              ;Restore rbp
+   246                                  
+   247 000001EA C3                      ret

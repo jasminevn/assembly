@@ -1,0 +1,28 @@
+#/bin/bash
+
+#Jasmine Nguyen
+#March 28, 2019
+
+rm *.o, *.lis, *.out
+echo " " #Blank line
+
+
+echo "Assemble the X86 file arrays-x86.asm"
+nasm -f elf64 -l evenonly.lis -o evenonly.o  evenonly.asm
+nasm -f elf64 -l replace.list -o replace.o replace.asm
+
+echo "Compile the C++ file array-main.cpp"
+g++ -c -m64 -Wall -fno-pie -no-pie -l even.lis -o even.o even.cpp 
+g++ -c -m64 -Wall -fno-pie -no-pie -l display.lis -o display.o display.cpp
+g++ -c -m64 -Wall -fno-pie -no-pie -l square.lis -o square.o square.cpp
+
+
+echo "Link the 'O' files arrays-main.o and arrays-x86.o"
+g++ -m64 -fno-pie -no-pie -o even.out even.o evenonly.o replace.o  display.o square.o 
+
+echo "Run the program Even Only Output"
+./even.out
+
+echo "This Bash script file will now terminate.  Bye."
+
+

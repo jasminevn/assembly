@@ -1,0 +1,236 @@
+     1                                  
+     2                                  ;========1=========2=========3=========4=========5=========6=========7=========8=========9=========0=========1=========2=========3=========4=========5=========6=========7**
+     3                                  ;Author name: Jasmine Nguyen	
+     4                                  ;Program title: Assembly Language
+     5                                  ;Files in this program: robot.cpp, doingmath.asm, core.sh
+     6                                  ;Course number: CPSC 240
+     7                                  ;Assignment number: 1
+     8                                  ;Required delivery date: Feb 4, 2019 before 11:59pm
+     9                                  ;Purpose: Learn how to embed C library function calls in an X86 module
+    10                                  ;Language of this module: X86 with Intel syntax
+    11                                  ;Compile this module: robot.cpp
+    12                                  
+    13                                  
+    14                                  ;Author information
+    15                                  ;  Author name: Floyd Holliday
+    16                                  ;  Author email: holliday@fullerton.edu or activeprofessor@yahoo.com
+    17                                  ;  Author location: CSUF
+    18                                  ;Course information
+    19                                  ;  Course number: CPSC240
+    20                                  ;  Assignment number: 6
+    21                                  ;  Due date: 2014-Aug-25
+    22                                  ;Project information
+    23                                  ;  Project title: Demonstrate Numeric IO
+    24                                  ;  Purpose: Demonstrate to the Cpsc240 class the operations of input and output of 64-bit floating point numbers.
+    25                                  ;  Status: No known errors
+    26                                  ;  Project files: fp-io-driver.cpp, fp-io.asm
+    27                                  ;Module information
+    28                                  ;  This module's call name: floating_point_io
+    29                                  ;  Language: X86-64
+    30                                  ;  Syntax: Intel
+    31                                  ;  Date last modified: 2014-Jan-14
+    32                                  ;  Purpose: This module will show how to call scanf for input and how to call printf for output.
+    33                                  ;  File name: fp-io.asm
+    34                                  ;  Status: This module functions as expected as a demonstrator.
+    35                                  ;  Future enhancements: None planned
+    36                                  ;Translator information
+    37                                  ;  Linux: nasm -f elf64 -l fp-io.lis -o fp-io.o fp-io.asm
+    38                                  ;References and creditsv  
+    39                                  ;  Seyfarth, Chapter 11
+    40                                  ;Format information
+    41                                  ;  Page width: 172 columns
+    42                                  ;  Begin comments: 61
+    43                                  ;  Optimal print specification: Landscape, 7 points or smaller, monospace, 8½x11 paper
+    44                                  ;
+    45                                  ;===== Begin code area ====================================================================================================================================================
+    46                                  
+    47                                  extern printf                                               ;External C++ function for writing to standard output device
+    48                                  
+    49                                  extern scanf                                                ;External C++ function for reading from the standard input device
+    50                                  
+    51                                  global floating_point_io                                    ;This makes floating_point_io callable by functions outside of this file.
+    52                                  
+    53                                  segment .data                                               ;Place initialized data here
+    54                                  
+    55                                  ;===== Declare some messages ==============================================================================================================================================
+    56                                  
+    57 00000000 57656C636F6D650A00      initialmessage db "Welcome", 10, 0
+    58                                  
+    59 00000009 496E70757420616E20-     prompt1 db "Input an integer " , 0
+    59 00000012 696E74656765722000 
+    60                                  
+    61 0000001B 256C6400                inputformat db "%ld", 0
+    62                                  
+    63 0000001F 5468652070726F6475-     multiplyout db "The product of %ld and %ld is %ld" , 10, 0
+    63 00000028 6374206F6620256C64-
+    63 00000031 20616E6420256C6420-
+    63 0000003A 697320256C640A00   
+    64                                  
+    65 00000042 5468652071756F7469-     outputformat db "The quotient is %ld and the remainder is %ld", 10, 0
+    65 0000004B 656E7420697320256C-
+    65 00000054 6420616E6420746865-
+    65 0000005D 2072656D61696E6465-
+    65 00000066 7220697320256C640A-
+    65 0000006F 00                 
+    66                                  
+    67 00000070 546869732061737365-     goodbye db "This assembly function will now return the remainder to the driver", 10, 0
+    67 00000079 6D626C792066756E63-
+    67 00000082 74696F6E2077696C6C-
+    67 0000008B 206E6F772072657475-
+    67 00000094 726E20746865207265-
+    67 0000009D 6D61696E6465722074-
+    67 000000A6 6F2074686520647269-
+    67 000000AF 7665720A00         
+    68                                  
+    69                                  
+    70                                  segment .bss                                                ;Place un-initialized data here.
+    71                                  
+    72                                  
+    73                                  
+    74                                  ;===== Begin executable instructions here =================================================================================================================================
+    75                                  
+    76                                  segment .text                                               ;Place executable instructions in this segment.
+    77                                  
+    78                                  floating_point_io:                                          ;Entry point.  Execution begins here.
+    79                                  
+    80                                  ;=========== Back up all the GPRs whether used in this program or not =====================================================================================================
+    81                                  
+    82 00000000 55                      push       rbp                                              ;Save a copy of the stack base pointer
+    83 00000001 4889E5                  mov        rbp, rsp                                         ;We do this in order to be 100% compatible with C and C++.
+    84 00000004 53                      push       rbx                                              ;Back up rbx
+    85 00000005 51                      push       rcx                                              ;Back up rcx
+    86 00000006 52                      push       rdx                                              ;Back up rdx
+    87 00000007 56                      push       rsi                                              ;Back up rsi
+    88 00000008 57                      push       rdi                                              ;Back up rdi
+    89 00000009 4150                    push       r8                                               ;Back up r8
+    90 0000000B 4151                    push       r9                                               ;Back up r9
+    91 0000000D 4152                    push       r10                                              ;Back up r10
+    92 0000000F 4153                    push       r11                                              ;Back up r11
+    93 00000011 4154                    push       r12                                              ;Back up r12
+    94 00000013 4155                    push       r13                                              ;Back up r13
+    95 00000015 4156                    push       r14                                              ;Back up r14
+    96 00000017 4157                    push       r15                                              ;Back up r15
+    97 00000019 9C                      pushf                                                       ;Back up rflags
+    98                                  
+    99                                  
+   100                                  
+   101                                  ;==========================================================================================================================================================================
+   102                                  startapplication: ;===== Begin the application here: demonstrate floating point i/o =======================================================================================
+   103                                  ;==========================================================================================================================================================================
+   104                                  
+   105                                  ;=========== Show the WELCOME message =====================================================================================================================================
+   106                                  
+   107 0000001A B800000000              mov qword  rax, 0                                           ;No data from SSE will be printed
+   108 0000001F 48BF-                   mov        rdi, initialmessage                              ;"This X86 program will demonstrate the input and output of 8-byte ... "
+   108 00000021 [0000000000000000] 
+   109 00000029 E8(00000000)            call       printf                                           ;Call a library function to make the output
+   110                                  
+   111                                  
+   112                                  ;=========== PROMPT FOR 1ST INTEGER =======================================================================================================================================
+   113                                  
+   114 0000002E B800000000              mov qword  rax, 0
+   115 00000033 48BF-                   mov        rdi, prompt1
+   115 00000035 [0900000000000000] 
+   116 0000003D E8(00000000)            call       printf
+   117                                  
+   118                                  
+   119                                  ;=========== SCANF FOR INPUT ==============================================================================================================================================
+   120 00000042 6A00                    push       qword 0
+   121 00000044 6A00                    push       qword 0
+   122 00000046 B800000000              mov 	   rax, 0                                           ;No data from SSE will be printed
+   123 0000004B 48BF-                   mov        rdi, inputformat                                 ;"%ld"
+   123 0000004D [1B00000000000000] 
+   124 00000055 4889E6                  mov	   rsi, rsp
+   125 00000058 E8(00000000)            call       scanf                                         
+   126 0000005D 415E                    pop        r14    
+   127 0000005F 58                      pop        rax                                     
+   128                                  
+   129                                  ;=========== PROMPT FOR 2ND INTEGER =======================================================================================================================================
+   130 00000060 B800000000              mov qword  rax, 0
+   131 00000065 48BF-                   mov        rdi, prompt1
+   131 00000067 [0900000000000000] 
+   132 0000006F E8(00000000)            call       printf
+   133                                  
+   134                                  ;========== SCANF FOR 2ND INPUT ===========================================================================================================================================
+   135                                  
+   136 00000074 6A00                    push       qword 0
+   137 00000076 6A00                    push       qword 0
+   138 00000078 B800000000              mov 	   rax, 0                                           ;No data from SSE will be printed
+   139 0000007D 48BF-                   mov        rdi, inputformat                                 ;"%ld"
+   139 0000007F [1B00000000000000] 
+   140 00000087 4889E6                  mov	   rsi, rsp
+   141 0000008A E8(00000000)            call       scanf                                         
+   142 0000008F 415F                    pop        r15    
+   143 00000091 58                      pop        rax                                     
+   144                                  
+   145                                  
+   146                                  ;=========== MULTIPLY 2 INTEGERS ==========================================================================================================
+   147                                  
+   148 00000092 4C89F3                  mov  	   rbx, r14
+   149 00000095 4C89F9                  mov        rcx, r15
+   150 00000098 480FAFD9                imul       rbx, rcx
+   151                                  
+   152                                  ;========== OUTPUT PRODUCT ===========================================================================================================
+   153                                  
+   154 0000009C B800000000              mov qword  rax, 0
+   155 000000A1 48BF-                   mov        rdi, multiplyout
+   155 000000A3 [1F00000000000000] 
+   156 000000AB 4C89F6                  mov	   rsi, r14
+   157 000000AE 4C89FA                  mov        rdx, r15
+   158 000000B1 4889D9                  mov        rcx, rbx
+   159 000000B4 E8(00000000)            call       printf
+   160                                  
+   161                                  ;========== DIVIDE 1ST BY 2ND =============================================================================================================================================
+   162                                  
+   163 000000B9 4C89F0                  mov       rax, r14
+   164 000000BC 4899                    cqo
+   165 000000BE 49F7FF                  idiv      r15
+   166 000000C1 4989D5                  mov	  r13, rdx
+   167                                  
+   168                                  ;idiv makes QUOTIENT to rax and REMAINDER to rdx even though it doesn't state it!!!
+   169                                  
+   170                                  ;========= SET UP OUTPUT AND CALL PRINTF ==================================================================================================================================
+   171                                  
+   172                                  
+   173 000000C4 48BF-                   mov       rdi, outputformat
+   173 000000C6 [4200000000000000] 
+   174 000000CE 4889C6                  mov 	  rsi, rax
+   175 000000D1 B800000000              mov qword rax, 0	
+   176 000000D6 E8(00000000)            call	  printf
+   177                                  
+   178                                  
+   179                                  ;========== SAY GOODBYE ===================================================================================================================================================
+   180                                  
+   181 000000DB B800000000              mov qword rax, 0
+   182 000000E0 48BF-                   mov       rdi, goodbye
+   182 000000E2 [7000000000000000] 
+   183 000000EA E8(00000000)            call      printf
+   184                                  
+   185                                  ;========== MOVE REMAINDER INTO RAX =============================================================================================================================================
+   186                                  
+   187 000000EF 4C89E8                  mov       rax, r13
+   188                                  
+   189                                  
+   190                                                                         
+   191                                  ;=========== RETURN ====================================================================================================
+   192                                  
+   193 000000F2 9D                      popf                                                        ;Restore rflags
+   194 000000F3 415F                    pop        r15                                              ;Restore r15
+   195 000000F5 415E                    pop        r14                                              ;Restore r14
+   196 000000F7 415D                    pop        r13                                              ;Restore r13
+   197 000000F9 415C                    pop        r12                                              ;Restore r12
+   198 000000FB 415B                    pop        r11                                              ;Restore r11
+   199 000000FD 415A                    pop        r10                                              ;Restore r10
+   200 000000FF 4159                    pop        r9                                               ;Restore r9
+   201 00000101 4158                    pop        r8                                               ;Restore r8
+   202 00000103 5F                      pop        rdi                                              ;Restore rdi
+   203 00000104 5E                      pop        rsi                                              ;Restore rsi
+   204 00000105 5A                      pop        rdx                                              ;Restore rdx
+   205 00000106 59                      pop        rcx                                              ;Restore rcx
+   206 00000107 5B                      pop        rbx                                              ;Restore rbx
+   207 00000108 5D                      pop        rbp                                              ;Restore rbp
+   208                                  
+   209 00000109 C3                      ret                                                         ;No parameter with this instruction.  This instruction will pop 8 bytes from
+   210                                                                                              ;the integer stack, and jump to the address found on the stack.
+   211                                  ;========== End of program fp-io.asm ======================================================================================================================================
+   212                                  ;========1=========2=========3=========4=========5=========6=========7=========8=========9=========0=========1=========2=========3=========4=========5=========6=========7**

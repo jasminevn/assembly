@@ -1,0 +1,195 @@
+     1                                  
+     2                                  ;=====Begin code here==================
+     3                                  extern printf						;External C++ function for writing to standard output device
+     4                                  
+     5                                  extern scanf						;External C++ function for reading from the standard input device
+     6                                  
+     7                                  global harmonic					;This makes harmonic callable by functions outside of this file
+     8                                  
+     9                                  segment .data						;Place initialized data here
+    10                                  
+    11                                  ;====declare some messages==========
+    12                                  
+    13 00000000 546869732070726F67-     introduction db "This program will compute the resistance of a circuit configured with parallel sub-circuits", 10, 0
+    13 00000009 72616D2077696C6C20-
+    13 00000012 636F6D707574652074-
+    13 0000001B 686520726573697374-
+    13 00000024 616E6365206F662061-
+    13 0000002D 206369726375697420-
+    13 00000036 636F6E666967757265-
+    13 0000003F 642077697468207061-
+    13 00000048 72616C6C656C207375-
+    13 00000051 622D63697263756974-
+    13 0000005A 730A00             
+    14                                  
+    15 0000005D 456E74657220746865-     promptmess db "Enter the resistance of a circuit: ", 0
+    15 00000066 20726573697374616E-
+    15 0000006F 6365206F6620612063-
+    15 00000078 6972637569743A2000 
+    16                                  
+    17 00000081 256C660A00              input db "%lf", 10, 0
+    18                                  
+    19 00000086 5468616E6B20796F75-     answer db "Thank you. The number of sub-circuits is %ld", 10, 0
+    19 0000008F 2E20546865206E756D-
+    19 00000098 626572206F66207375-
+    19 000000A1 622D63697263756974-
+    19 000000AA 7320697320256C640A-
+    19 000000B3 00                 
+    20                                  
+    21 000000B4 54686520746F74616C-     total db "The total resistance in this system is R = %lf", 10, 0
+    21 000000BD 20726573697374616E-
+    21 000000C6 636520696E20746869-
+    21 000000CF 732073797374656D20-
+    21 000000D8 69732052203D20256C-
+    21 000000E1 660A00             
+    22                                  
+    23 000000E4 5468616E6B20796F75-     bye db "Thank you for using ECP. The total resistance will now be returned to the driver program", 10, 0
+    23 000000ED 20666F72207573696E-
+    23 000000F6 67204543502E205468-
+    23 000000FF 6520746F74616C2072-
+    23 00000108 6573697374616E6365-
+    23 00000111 2077696C6C206E6F77-
+    23 0000011A 206265207265747572-
+    23 00000123 6E656420746F207468-
+    23 0000012C 652064726976657220-
+    23 00000135 70726F6772616D0A00 
+    24                                  
+    25                                  segment .bss
+    26                                  
+    27                                  ;=====begin executable instructions here===========
+    28                                  
+    29                                  segment .text						;Place executable instructions in this segment
+    30                                  
+    31                                  harmonic:							;Entry point. Execution begins here.
+    32                                  
+    33                                  
+    34                                  ;=========== Back up all the GPRs whether used in this program or not ====================
+    35                                  
+    36 00000000 55                      push       rbp                                              ;Save a copy of the stack base pointer
+    37 00000001 4889E5                  mov        rbp, rsp                                         ;We do this in order to be 100% compatible with C and C++.
+    38 00000004 53                      push       rbx                                              ;Back up rbx
+    39 00000005 51                      push       rcx                                              ;Back up rcx
+    40 00000006 52                      push       rdx                                              ;Back up rdx
+    41 00000007 56                      push       rsi                                              ;Back up rsi
+    42 00000008 57                      push       rdi                                              ;Back up rdi
+    43 00000009 4150                    push       r8                                               ;Back up r8
+    44 0000000B 4151                    push       r9                                               ;Back up r9
+    45 0000000D 4152                    push       r10                                              ;Back up r10
+    46 0000000F 4153                    push       r11                                              ;Back up r11
+    47 00000011 4154                    push       r12                                              ;Back up r12
+    48 00000013 4155                    push       r13                                              ;Back up r13
+    49 00000015 4156                    push       r14                                              ;Back up r14
+    50 00000017 4157                    push       r15                                              ;Back up r15
+    51 00000019 9C                      pushf                                                       ;Back up rflags
+    52                                  
+    53                                  
+    54                                  ;==== display mess=====
+    55 0000001A B800000000              mov qword rax, 0
+    56 0000001F 48BF-                   mov rdi, introduction					;This program will compute circuits
+    56 00000021 [0000000000000000] 
+    57 00000029 E8(00000000)            call printf
+    58                                  
+    59                                  ;===Ask user for values=====
+    60                                  
+    61 0000002E B800000000              mov qword rax, 0
+    62 00000033 48BF-                   mov rdi, promptmess					;Enter the resistance
+    62 00000035 [5D00000000000000] 
+    63 0000003D E8(00000000)            call printf
+    64                                  
+    65                                  
+    66                                  ;===== for loop until ctrl d =========================
+    67                                  
+    68 00000042 41BF00000000            mov r15, 0
+    69 00000048 6A00                    push qword 0
+    70 0000004A F2440F101424            movsd xmm10, [rsp]
+    71 00000050 58                      pop rax
+    72                                  
+    73                                  begin_loop:
+    74 00000051 6A00                    push qword 0
+    75 00000053 6A00                    push qword 0					;reserve 8 bytes of storage 
+    76 00000055 B800000000              mov qword  rax, 0				;SSE is not involved in this scanf operation
+    77 0000005A 48BF-                   mov rdi, input
+    77 0000005C [8100000000000000] 
+    78 00000064 4889E6                  mov rsi, rsp					;give scanf a pointer to the reserved storage
+    79 00000067 E8(00000000)            call scanf						;call a library function to do the input work
+    80                                  
+    81 0000006C 99                      cdq								;place into rdx sign-extension of that 32-bits to the left
+    82 0000006D 48C1E220                shl rdx, 32						;shift the sign extension 32 bits to the left
+    83 00000071 4809D0                  or  rax, rdx					;Perform the operation rax = rax or rdx
+    84 00000074 4883F8FF                cmp rax, -1						;Compare rax with -1
+    85 00000078 7422                    je	 loop_finished				;if rax == -1 then exit from the loop
+    86                                  
+    87 0000007A F2440F100424            movsd xmm8, [rsp]
+    88                                  
+    89                                  ;mov qword rax, 1
+    90                                  ;mov rdi, total					;The total number of resistance is "%lf"
+    91                                  ;movsd xmm0, xmm8
+    92                                  ;call printf
+    93                                  
+    94 00000080 B801000000              mov rax, 1
+    95 00000085 F24C0F2AC8              cvtsi2sd xmm9, rax
+    96 0000008A F2450F5EC8              divsd xmm9, xmm8
+    97 0000008F F2450F58D1              addsd xmm10, xmm9
+    98                                  
+    99                                  
+   100                                  ;mov qword rax, 1
+   101                                  ;mov rdi, total					;The total number of resistance is "%lf"
+   102                                  ;movsd xmm0, xmm9
+   103                                  ;call printf
+   104                                  
+   105 00000094 415D                    pop r13							;make free the storage that was used by scanf
+   106 00000096 58                      pop rax
+   107 00000097 49FFC7                  inc r15							;add 1 to the loop counter
+   108 0000009A EBB5                    jmp begin_loop					;REPEAT THE LOOP
+   109                                  
+   110                                  loop_finished:
+   111 0000009C 58                      pop rax                                        ;These two pops are needed because the loop did not complete the last
+   112 0000009D 58                      pop rax                                        ;iteration.  The loop jumped out before doing 2 pops.
+   113                                  
+   114 0000009E F2450F10FA              movsd xmm15, xmm10                             ;Save an extra backup copy of xmm10
+   115                                  
+   116                                  ;====Return total======
+   117 000000A3 B800000000              mov qword rax, 0
+   118 000000A8 48BF-                   mov rdi, answer			;The total number of sub-circuits is "%ld"
+   118 000000AA [8600000000000000] 
+   119 000000B2 4C89FE                  mov rsi, r15
+   120 000000B5 E8(00000000)            call printf
+   121                                  
+   122                                  ;====1/R=======
+   123                                  
+   124                                  
+   125 000000BA B801000000              mov qword rax, 1
+   126 000000BF 48BF-                   mov rdi, total					;The total number of resistance is "%lf"
+   126 000000C1 [B400000000000000] 
+   127 000000C9 F2410F10C2              movsd xmm0, xmm10
+   128 000000CE E8(00000000)            call printf
+   129                                  
+   130                                  ;==== bye=========
+   131                                  
+   132 000000D3 B800000000              mov qword rax, 0
+   133 000000D8 48BF-                   mov rdi, bye					;"resistance will be returned to  driver"
+   133 000000DA [E400000000000000] 
+   134 000000E2 E8(00000000)            call printf
+   135                                  
+   136                                  
+   137 000000E7 F2410F10C7              movsd xmm0, xmm15                               ;Send a copy of the resistance to the driver.
+   138                                  
+   139                                  ;=========== Restore GPR values and return to the caller =========
+   140                                  
+   141 000000EC 9D                      popf                                                        ;Restore rflags
+   142 000000ED 415F                    pop        r15                                              ;Restore r15
+   143 000000EF 415E                    pop        r14                                              ;Restore r14
+   144 000000F1 415D                    pop        r13                                              ;Restore r13
+   145 000000F3 415C                    pop        r12                                              ;Restore r12
+   146 000000F5 415B                    pop        r11                                              ;Restore r11
+   147 000000F7 415A                    pop        r10                                              ;Restore r10
+   148 000000F9 4159                    pop        r9                                               ;Restore r9
+   149 000000FB 4158                    pop        r8                                               ;Restore r8
+   150 000000FD 5F                      pop        rdi                                              ;Restore rdi
+   151 000000FE 5E                      pop        rsi                                              ;Restore rsi
+   152 000000FF 5A                      pop        rdx                                              ;Restore rdx
+   153 00000100 59                      pop        rcx                                              ;Restore rcx
+   154 00000101 5B                      pop        rbx                                              ;Restore rbx
+   155 00000102 5D                      pop        rbp                                              ;Restore rbp
+   156                                  
+   157 00000103 C3                      ret

@@ -1,0 +1,230 @@
+     1                                  ; Author Name: Jasmine Nguyen
+     2                                  ; Program name: Accumulator Program
+     3                                  ; Names of files in this programming: sum.asm, loopsum.cpp, flash.sh
+     4                                  ; Course number: CPSC 240
+     5                                  ; Scheduled delivery date: February 18, 2019
+     6                                  ; Program purpose: Compute sum
+     7                                  ; Date of last modification:
+     8                                  
+     9                                  ;========1=========2=========3=========4=========5=========6=========7=========8=========9=========0=========1=========2=========3=========4=========5=========6=========7**
+    10                                  ;Author information
+    11                                  ;  Author name: Floyd Holliday
+    12                                  ;  Author email: holliday@fullerton.edu or activeprofessor@yahoo.com
+    13                                  ;  Author location: CSUF
+    14                                  ;Course information
+    15                                  ;  Course number: CPSC240
+    16                                  ;  Assignment number: 6
+    17                                  ;  Due date: 2014-Aug-25
+    18                                  ;Project information
+    19                                  ;  Project title: Demonstrate Numeric IO
+    20                                  ;  Purpose: Demonstrate to the Cpsc240 class the operations of input and output of 64-bit floating point numbers.
+    21                                  ;  Status: No known errors
+    22                                  ;  Project files: fp-io-driver.cpp, fp-io.asm
+    23                                  ;Module information
+    24                                  ;  This module's call name: floating_point_io
+    25                                  ;  Language: X86-64
+    26                                  ;  Syntax: Intel
+    27                                  ;  Date last modified: 2014-Jan-14
+    28                                  ;  Purpose: This module will show how to call scanf for input and how to call printf for output.
+    29                                  ;  File name: fp-io.asm
+    30                                  ;  Status: This module functions as expected as a demonstrator.
+    31                                  ;  Future enhancements: None planned
+    32                                  ;Translator information
+    33                                  ;  Linux: nasm -f elf64 -l fp-io.lis -o fp-io.o fp-io.asm
+    34                                  ;References and credits
+    35                                  ;  Seyfarth, Chapter 11
+    36                                  ;Format information
+    37                                  ;  Page width: 172 columns
+    38                                  ;  Begin comments: 61
+    39                                  ;  Optimal print specification: Landscape, 7 points or smaller, monospace, 8½x11 paper
+    40                                  ;
+    41                                  ;===== Begin code area ====================================================================================================================================================
+    42                                  
+    43                                  extern printf                                               ;External C++ function for writing to standard output device
+    44                                  
+    45                                  extern scanf                                                ;External C++ function for reading from the standard input device
+    46                                  
+    47                                  global floating_point_io                                    ;This makes floating_point_io callable by functions outside of this file.
+    48                                  
+    49                                  segment .data                                               ;Place initialized data here
+    50                                  
+    51                                  ;===== Declare some messages ==============================================================================================================================================
+    52                                  
+    53 00000000 546865206661737420-     initialmessage db "The fast accumulator program written in X86 Intel langauge has begun", 10, 0
+    53 00000009 616363756D756C6174-
+    53 00000012 6F722070726F677261-
+    53 0000001B 6D207772697474656E-
+    53 00000024 20696E205838362049-
+    53 0000002D 6E74656C206C616E67-
+    53 00000036 617567652068617320-
+    53 0000003F 626567756E0A00     
+    54                                  
+    55 00000046 496E73747275637469-     instruction    db "Instructions: Enter a sequence of integers. Include white space between each number. To terminate, press 'Enter' followed by Control+D.", 10, 0
+    55 0000004F 6F6E733A20456E7465-
+    55 00000058 722061207365717565-
+    55 00000061 6E6365206F6620696E-
+    55 0000006A 7465676572732E2049-
+    55 00000073 6E636C756465207768-
+    55 0000007C 697465207370616365-
+    55 00000085 206265747765656E20-
+    55 0000008E 65616368206E756D62-
+    55 00000097 65722E20546F207465-
+    55 000000A0 726D696E6174652C20-
+    55 000000A9 70726573732027456E-
+    55 000000B2 7465722720666F6C6C-
+    55 000000BB 6F7765642062792043-
+    55 000000C4 6F6E74726F6C2B442E-
+    55 000000CD 0A00               
+    56                                  
+    57 000000CF 456E74657220616E20-     promptmessage  db "Enter an integer: ", 0
+    57 000000D8 696E74656765723A20-
+    57 000000E1 00                 
+    58                                  
+    59 000000E2 256C6400                inputformat    db "%ld", 0
+    60                                  
+    61 000000E6 5468616E6B20796F75-     outputformat   db "Thank you. You entered %ld numbers with a sum equal to %ld.", 10, 0
+    61 000000EF 2E20596F7520656E74-
+    61 000000F8 6572656420256C6420-
+    61 00000101 6E756D626572732077-
+    61 0000010A 69746820612073756D-
+    61 00000113 20657175616C20746F-
+    61 0000011C 20256C642E0A00     
+    62                                  
+    63 00000123 546865205838362066-     goodbye        db "The X86 function will now return the sum to the caller program. Bye.", 10, 0
+    63 0000012C 756E6374696F6E2077-
+    63 00000135 696C6C206E6F772072-
+    63 0000013E 657475726E20746865-
+    63 00000147 2073756D20746F2074-
+    63 00000150 68652063616C6C6572-
+    63 00000159 2070726F6772616D2E-
+    63 00000162 204279652E0A00     
+    64                                  
+    65                                  segment .bss 
+    66                                  
+    67                                                                         
+    68                                  ;===== Begin executable instructions here =================================================================================================================================
+    69                                  
+    70                                  segment .text                                               ;Place executable instructions in this segment.
+    71                                  
+    72                                  floating_point_io:                                          ;Entry point.  Execution begins here.
+    73                                  
+    74                                  ;=========== Back up all the GPRs whether used in this program or not =====================================================================================================
+    75                                  
+    76 00000000 55                      push       rbp                                              ;Save a copy of the stack base pointer
+    77 00000001 4889E5                  mov        rbp, rsp                                         ;We do this in order to be 100% compatible with C and C++.
+    78 00000004 53                      push       rbx                                              ;Back up rbx
+    79 00000005 51                      push       rcx                                              ;Back up rcx
+    80 00000006 52                      push       rdx                                              ;Back up rdx
+    81 00000007 56                      push       rsi                                              ;Back up rsi
+    82 00000008 57                      push       rdi                                              ;Back up rdi
+    83 00000009 4150                    push       r8                                               ;Back up r8
+    84 0000000B 4151                    push       r9                                               ;Back up r9
+    85 0000000D 4152                    push       r10                                              ;Back up r10
+    86 0000000F 4153                    push       r11                                              ;Back up r11
+    87 00000011 4154                    push       r12                                              ;Back up r12
+    88 00000013 4155                    push       r13                                              ;Back up r13
+    89 00000015 4156                    push       r14                                              ;Back up r14
+    90 00000017 4157                    push       r15                                              ;Back up r15
+    91 00000019 9C                      pushf                                                       ;Back up rflags
+    92                                  
+    93 0000001A 6A00                    push qword 0
+    94                                  
+    95                                  ;==========================================================================================================================================================================
+    96                                  startapplication: ;===== Begin the application here: demonstrate floating point i/o =======================================================================================
+    97                                  ;==========================================================================================================================================================================
+    98                                  
+    99                                  ;=========== Show the initial message ==================
+   100                                  
+   101 0000001C B800000000              mov qword  rax, 0                                           ;No data from SSE will be printed
+   102 00000021 48BF-                   mov        rdi, initialmessage                              ;"This X86 program will demonstrate the input and output of 8-byte ... "
+   102 00000023 [0000000000000000] 
+   103 0000002B E8(00000000)            call       printf                                           ;Call a library function to make the output
+   104                                  
+   105                                  
+   106                                  ;========== Print instructions ============================
+   107                                  
+   108 00000030 B800000000              mov qword   rax, 0
+   109 00000035 48BF-                   mov         rdi, instruction
+   109 00000037 [4600000000000000] 
+   110 0000003F E8(00000000)            call        printf
+   111                                  
+   112                                  ;=========== Prompt for integer ==============
+   113                                  
+   114 00000044 B800000000              mov qword  rax, 0                                           
+   115 00000049 48BF-                   mov        rdi, promptmessage                    ;Enter an integer:           
+   115 0000004B [CF00000000000000] 
+   116 00000053 E8(00000000)            call       printf                                           
+   117                                  
+   118                                  
+   119                                  
+   120                                  ;===== for loop until ctrl d =========================
+   121                                  
+   122 00000058 41BF00000000            mov        r15, 0
+   123 0000005E 41BE00000000            mov	   r14, 0
+   124                                  begin_loop:
+   125                                  
+   126 00000064 6A00                    push qword 0				;reserve 8 bytes of storage 
+   127 00000066 B800000000              mov qword  rax, 0			;SSE is not involved in this scanf operation
+   128 0000006B 48BF-                   mov        rdi, inputformat
+   128 0000006D [E200000000000000] 
+   129 00000075 4889E6                  mov        rsi, rsp			;give scanf a pointer to the reserved storage
+   130 00000078 E8(00000000)            call       scanf			;call a library function to do the input work
+   131 0000007D 99                      cdq					;place into rdx sign-extension of that 32-bits to the left
+   132 0000007E 48C1E220                shl 	   rdx, 32			;shift the sign extension 32 bits to the left
+   133 00000082 4809D0                  or         rax, rdx			;Perform the operation rax = rax or rdx
+   134 00000085 4883F8FF                cmp 	   rax, -1			;Compare rax with -1
+   135 00000089 740D                    je	   loop_finished		;if rax == -1 then exit from the loop
+   136 0000008B 4C8B2C24                mov	   r13, [rsp]			;copy the inputted number to r13
+   137 0000008F 58                      pop	   rax				;make free the storage that was used by scanf
+   138 00000090 49FFC7                  inc	   r15				;add 1 to the loop counter
+   139 00000093 4D01EE                  add	   r14, r13			;add the two numbers together
+   140 00000096 EBCC                    jmp	   begin_loop			;REPEAT THE LOOP
+   141                                  
+   142                                  loop_finished:
+   143 00000098 58                      pop	   rax
+   144                                  
+   145                                  
+   146                                  ;====== output sum ==============
+   147                                  
+   148 00000099 B800000000              mov qword rax, 0
+   149 0000009E 48BF-                   mov  	  rdi, outputformat		;you entered %ld numbers with the sum equal to %ld
+   149 000000A0 [E600000000000000] 
+   150 000000A8 4C89FE                  mov 	  rsi, r15			;numbers inputted
+   151 000000AB 4C89F2                  mov       rdx, r14			;sum
+   152 000000AE E8(00000000)            call      printf
+   153                                  
+   154                                  
+   155                                  ;===== output goodbye=======
+   156                                  
+   157 000000B3 B800000000              mov qword rax, 0
+   158 000000B8 48BF-                   mov 	  rdi, goodbye
+   158 000000BA [2301000000000000] 
+   159 000000C2 E8(00000000)            call 	  printf
+   160                                  
+   161                                  ;==== return sum ===============
+   162 000000C7 58                      pop rax
+   163 000000C8 4C89F0                  mov rax, r14
+   164                                  
+   165                                  ;=========== Restore GPR values and return to the caller ==================================================================================================================
+   166                                  
+   167                                  
+   168 000000CB 9D                      popf                                                        ;Restore rflags
+   169 000000CC 415F                    pop        r15                                              ;Restore r15
+   170 000000CE 415E                    pop        r14                                              ;Restore r14
+   171 000000D0 415D                    pop        r13                                              ;Restore r13
+   172 000000D2 415C                    pop        r12                                              ;Restore r12
+   173 000000D4 415B                    pop        r11                                              ;Restore r11
+   174 000000D6 415A                    pop        r10                                              ;Restore r10
+   175 000000D8 4159                    pop        r9                                               ;Restore r9
+   176 000000DA 4158                    pop        r8                                               ;Restore r8
+   177 000000DC 5F                      pop        rdi                                              ;Restore rdi
+   178 000000DD 5E                      pop        rsi                                              ;Restore rsi
+   179 000000DE 5A                      pop        rdx                                              ;Restore rdx
+   180 000000DF 59                      pop        rcx                                              ;Restore rcx
+   181 000000E0 5B                      pop        rbx                                              ;Restore rbx
+   182 000000E1 5D                      pop        rbp                                              ;Restore rbp
+   183                                  
+   184 000000E2 C3                      ret                                                         ;No parameter with this instruction.  This instruction will pop 8 bytes from
+   185                                                                                              ;the integer stack, and jump to the address found on the stack.
+   186                                  ;========== End of program fp-io.asm ======================================================================================================================================
+   187                                  ;========1=========2=========3=========4=========5=========6=========7=========8=========9=========0=========1=========2=========3=========4=========5=========6=========7**

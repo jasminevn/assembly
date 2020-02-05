@@ -1,0 +1,94 @@
+     1                                  
+     2                                  ;Jasmine Nguyen
+     3                                  ;March 28, 2019
+     4                                  
+     5                                  
+     6                                  ;===== Begin code area ====================================================================================================================================================
+     7                                  
+     8                                  extern printf                                               ;External C++ function for writing to standard output device
+     9                                  
+    10                                  extern scanf                                                ;External C++ function for reading from the standard input device
+    11                                  
+    12                                  extern display
+    13                                  
+    14                                  extern square
+    15                                  
+    16                                  extern replace
+    17                                  
+    18                                  global evenonly                                             ;This makes evenonly callable by functions outside of this file.
+    19                                  
+    20                                  segment .data                                               ;Place initialized data here
+    21                                  
+    22                                  
+    23                                  
+    24                                  ;===== Declare some messages ==============================================================================================================================================
+    25                                  ;The identifiers in this segment are quadword pointers to ascii strings stored in heap space.  They are not variables.  They are not constants.  There are no constants in
+    26                                  ;assembly programming.  There are no variables in assembly programming: the registers assume the role of variables.
+    27                                  
+    28 00000000 506C6561736520656E-     promptmessage db "Please enter an integer: " , 0
+    28 00000009 74657220616E20696E-
+    28 00000012 74656765723A2000   
+    29                                  
+    30 0000001A 256C6400                inputformat db "%ld" , 0
+    31                                  
+    32                                  segment .bss                                                ;Declare pointers to un-initialized space in this segment.
+    33                                  
+    34 00000000 <res 000001E0>          myarray resq 60
+    35                                  ;==========================================================================================================================================================================
+    36                                  ;===== Begin the application here: show how to input and output floating point numbers ====================================================================================
+    37                                  ;==========================================================================================================================================================================
+    38                                  
+    39                                  segment .text                                               ;Place executable instructions in this segment.
+    40                                  
+    41                                  evenonly:                                                ;Entry point.  Execution begins here.
+    42                                  
+    43                                  ;=========== Prompt for integer ==============
+    44                                  
+    45 00000000 B800000000              mov qword  rax, 0                                           
+    46 00000005 48BF-                   mov        rdi, promptmessage                    ;Enter an integer:           
+    46 00000007 [0000000000000000] 
+    47 0000000F E8(00000000)            call       printf                                           
+    48                                  
+    49                                  
+    50                                  
+    51                                  ;===== for loop until ctrl d =========================
+    52                                  
+    53 00000014 41BF00000000            mov        r15, 0
+    54 0000001A 41BE00000000            mov	     r14, 0
+    55                                  begin_loop:
+    56                                  
+    57 00000020 49B8-                   mov r8, myarray
+    57 00000022 [0000000000000000] 
+    58 0000002A 6A00                    push qword 0				;reserve 8 bytes of storage 
+    59 0000002C B800000000              mov qword  rax, 0			;SSE is not involved in this scanf operation
+    60 00000031 48BF-                   mov        rdi, inputformat
+    60 00000033 [1A00000000000000] 
+    61 0000003B 4889E6                  mov        rsi, rsp			;give scanf a pointer to the reserved storage
+    62 0000003E E8(00000000)            call       scanf			;call a library function to do the input work
+    63 00000043 99                      cdq					;place into rdx sign-extension of that 32-bits to the left
+    64 00000044 48C1E220                shl 	     rdx, 32			;shift the sign extension 32 bits to the left
+    65 00000048 4809D0                  or         rax, rdx			;Perform the operation rax = rax or rdx
+    66 0000004B 4883F8FF                cmp 	     rax, -1			;Compare rax with -1
+    67 0000004F 740E                    je	   loop_finished		;if rax == -1 then exit from the loop
+    68 00000051 4C8B2C24                mov	     r13, [rsp]			;copy the inputted number to r13
+    69 00000055 4F892CF8                mov        [r8 + 8 * r15], r13
+    70 00000059 58                      pop	     rax				;make free the storage that was used by scanf
+    71 0000005A 49FFC7                  inc	     r15				;add 1 to the loop counter
+    72 0000005D EBC1                    jmp	     begin_loop			;REPEAT THE LOOP
+    73                                  
+    74                                  loop_finished:
+    75 0000005F 58                      pop	   rax
+    76                                  
+    77                                  
+    78 00000060 48BF-                   mov rdi, myarray
+    78 00000062 [0000000000000000] 
+    79 0000006A 4C89FE                  mov rsi, r15
+    80 0000006D E8(00000000)            call display
+    81                                  
+    82 00000072 E8(00000000)            call replace
+    83                                  
+    84 00000077 E8(00000000)            call square
+    85                                  
+    86                                  
+    87                                  
+    88 0000007C C3                      ret                                                         ;Pop a qword from the stack into rip, and continue executing..
